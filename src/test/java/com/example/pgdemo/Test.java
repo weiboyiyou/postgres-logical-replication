@@ -33,12 +33,12 @@ public class Test {
 		Connection con = DriverManager.getConnection(url, props);
 
 		PGConnection replConnection = con.unwrap(PGConnection.class);
-		replConnection.getReplicationAPI()
-				.createReplicationSlot()
-				.logical()
-				.withSlotName("demo_logical_slot21")
-				.withOutputPlugin("test_decoding")
-				.make();
+//		replConnection.getReplicationAPI()
+//				.createReplicationSlot()
+//				.logical()
+//				.withSlotName("demo_logical_slot21")
+//				.withOutputPlugin("test_decoding")
+//				.make();
 		PGReplicationStream stream =
 				replConnection.getReplicationAPI()
 						.replicationStream()
@@ -48,22 +48,26 @@ public class Test {
 						.withSlotOption("skip-empty-xacts", true)
 						.start();
 
-		ByteBuffer read = stream.read();
-		System.out.println(read);
-		while (true) {
-			//non blocking receive message
-			ByteBuffer msg = stream.readPending();
-
-			if (msg == null) {
-				TimeUnit.MILLISECONDS.sleep(10L);
-				continue;
-			}
-
-			int offset = msg.arrayOffset();
+		ByteBuffer msg = stream.read();
+		int offset = msg.arrayOffset();
 			byte[] source = msg.array();
 			int length = source.length - offset;
 			System.out.println(new String(source, offset, length));
-		}
+//		System.out.println("read"+read);
+//		while (true) {
+//			//non blocking receive message
+//			ByteBuffer msg = stream.readPending();
+//
+//			if (msg == null) {
+//				TimeUnit.MILLISECONDS.sleep(10L);
+//				continue;
+//			}
+//
+//			int offset = msg.arrayOffset();
+//			byte[] source = msg.array();
+//			int length = source.length - offset;
+//			System.out.println(new String(source, offset, length));
+//		}
 
 	}
 
