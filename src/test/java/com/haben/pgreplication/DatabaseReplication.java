@@ -1,22 +1,15 @@
-package com.example.pgdemo;
+package com.haben.pgreplication;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.postgresql.PGConnection;
 import org.postgresql.PGProperty;
-import org.postgresql.replication.LogSequenceNumber;
 import org.postgresql.replication.PGReplicationStream;
 
 import java.nio.ByteBuffer;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Date;
 import java.util.Properties;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @Author: Haben
@@ -108,10 +101,10 @@ public class DatabaseReplication {
 	}
 
 	private void interruptReplicate() throws Exception {
-		int i = SysConstans.TASK_COUNT.decrementAndGet();
+		int i = SysConstants.TASK_COUNT.decrementAndGet();
 		System.out.println("被终止了wakaka,当前线程执行数量为" + i);
 		// 删除doing 因为进程没终止 这个还会在的
-		client.delete().forPath(SysConstans.DOING_TASK_PATH + "/" + config.getTaskName());
+		client.delete().forPath(SysConstants.DOING_TASK_PATH + "/" + config.getTaskName());
 		// 修改当前节点的数量
 		HaRegister.writeExecTaskSizeToZk();
 	}

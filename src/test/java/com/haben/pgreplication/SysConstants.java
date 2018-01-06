@@ -1,4 +1,4 @@
-package com.example.pgdemo;
+package com.haben.pgreplication;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -11,10 +11,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @Date: 2018-01-07 01:27
  * @Version: 1.0
  **/
-public class SysConstans {
+public class SysConstants {
 	public static final String MACHINE_CODE = UUID.randomUUID().toString() + ":" + getHost();
 	public static final AtomicInteger TASK_COUNT = new AtomicInteger(0);
-	public static final String ROOT_PATH = "/pg-logic-replication";
+	private static final String ROOT_PATH = "/pg-logical-replication";
 	public static final String LEADER_PATH = ROOT_PATH + "/leader";
 	public static final String DB_TASK_PATH = ROOT_PATH + "/db-task";
 	public static final String DOING_TASK_PATH = ROOT_PATH + "/doing-task";
@@ -25,7 +25,7 @@ public class SysConstans {
 			return InetAddress.getLocalHost().getHostName();
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
+			return "unknow";
 		}
-		return "unknow";
 	}
 }

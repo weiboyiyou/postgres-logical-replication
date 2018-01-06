@@ -1,22 +1,9 @@
-package com.example.pgdemo;
+package com.haben.pgreplication;
 
-import org.apache.curator.RetryPolicy;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.recipes.leader.LeaderSelector;
-import org.apache.curator.framework.recipes.leader.LeaderSelectorListener;
-import org.apache.curator.framework.recipes.leader.LeaderSelectorListenerAdapter;
-import org.apache.curator.framework.state.ConnectionState;
-import org.apache.curator.retry.ExponentialBackoffRetry;
-import org.apache.kafka.common.protocol.types.Field;
-import org.apache.zookeeper.CreateMode;
-import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -61,7 +48,7 @@ public class DatabaseReplicationMain {
 		DatabaseReplicationConfig.initZkPath();
 		HaRegister.syncExecTaskSizeToZk();
 
-		LeaderSelector leaderSelector = new LeaderSelector(ZkClient.client, SysConstans.LEADER_PATH, new ReplicationLeaderSelectorListener());
+		LeaderSelector leaderSelector = new LeaderSelector(ZkClient.client, SysConstants.LEADER_PATH, new ReplicationLeaderSelectorListener());
 
 		leaderSelector.start();
 		leaderSelector.autoRequeue();
@@ -73,7 +60,7 @@ public class DatabaseReplicationMain {
 			log.debug("当前执行数量" + activeCount);
 			log.debug("当前剩余数量" + (maximumPoolSize - activeCount));
 			// 写入zk 任务过来时候排序是否最小 最小的话那就执行 不然不执行
-			log.debug("我是谁:" + SysConstans.MACHINE_CODE);
+			log.debug("我是谁:" + SysConstants.MACHINE_CODE);
 //			HaRegister.syncExecTaskSizeToZk();
 			Thread.sleep(20000);
 			HaRegister.loadBalance();

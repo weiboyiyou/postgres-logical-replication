@@ -1,4 +1,4 @@
-package com.example.pgdemo;
+package com.haben.pgreplication;
 
 import java.io.*;
 import java.util.Properties;

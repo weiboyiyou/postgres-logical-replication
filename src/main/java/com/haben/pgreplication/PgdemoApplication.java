@@ -1,4 +1,4 @@
-package com.example.pgdemo;
+package com.haben.pgreplication;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
