@@ -1,5 +1,10 @@
-package com.haben.pgreplication;
+package com.haben.pgreplication.listener;
 
+import com.haben.pgreplication.DatabaseReplicationMain;
+import com.haben.pgreplication.config.DatabaseConfig;
+import com.haben.pgreplication.config.SysConstants;
+import com.haben.pgreplication.ha.HaRegister;
+import com.haben.pgreplication.zk.ZkClient;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.leader.LeaderSelectorListener;
 import org.apache.curator.framework.state.ConnectionState;

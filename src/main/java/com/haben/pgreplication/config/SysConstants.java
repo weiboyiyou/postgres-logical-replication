@@ -1,4 +1,4 @@
-package com.haben.pgreplication;
+package com.haben.pgreplication.config;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;

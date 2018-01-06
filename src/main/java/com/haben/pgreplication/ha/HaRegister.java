@@ -1,5 +1,8 @@
-package com.haben.pgreplication;
+package com.haben.pgreplication.ha;
 
+import com.haben.pgreplication.config.SysConstants;
+import com.haben.pgreplication.entity.DatabaseReplication;
+import com.haben.pgreplication.zk.ZkClient;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;

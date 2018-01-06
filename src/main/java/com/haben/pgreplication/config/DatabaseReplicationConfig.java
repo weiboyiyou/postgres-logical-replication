@@ -1,5 +1,6 @@
-package com.haben.pgreplication;
+package com.haben.pgreplication.config;
 
+import com.haben.pgreplication.zk.ZkClient;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.data.Stat;
 

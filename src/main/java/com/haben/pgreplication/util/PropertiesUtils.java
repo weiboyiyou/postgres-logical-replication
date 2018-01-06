@@ -1,4 +1,4 @@
-package com.haben.pgreplication;
+package com.haben.pgreplication.util;
 
 import java.io.*;
 import java.util.Properties;

@@ -1,4 +1,4 @@
-package com.haben.pgreplication;
+package com.haben.pgreplication.config;
 
 /**
  * @Author: Haben

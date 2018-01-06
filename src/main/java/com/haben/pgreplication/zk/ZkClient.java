@@ -1,5 +1,6 @@
-package com.haben.pgreplication;
+package com.haben.pgreplication.zk;
 
+import com.haben.pgreplication.util.PropertiesUtils;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;

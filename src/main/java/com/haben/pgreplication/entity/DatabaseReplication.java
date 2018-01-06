@@ -1,5 +1,8 @@
-package com.haben.pgreplication;
+package com.haben.pgreplication.entity;
 
+import com.haben.pgreplication.config.DatabaseConfig;
+import com.haben.pgreplication.config.SysConstants;
+import com.haben.pgreplication.ha.HaRegister;
 import org.apache.curator.framework.CuratorFramework;
 import org.postgresql.PGConnection;
 import org.postgresql.PGProperty;
