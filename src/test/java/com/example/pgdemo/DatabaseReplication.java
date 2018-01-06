@@ -110,6 +110,9 @@ public class DatabaseReplication {
 	private void interruptReplicate() throws Exception {
 		int i = SysConstans.TASK_COUNT.decrementAndGet();
 		System.out.println("被终止了wakaka,当前线程执行数量为" + i);
+		// 删除doing 因为进程没终止 这个还会在的
 		client.delete().forPath(SysConstans.DOING_TASK_PATH + "/" + config.getTaskName());
+		// 修改当前节点的数量
+		HaRegister.writeExecTaskSizeToZk();
 	}
 }
