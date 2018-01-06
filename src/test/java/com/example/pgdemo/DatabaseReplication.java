@@ -26,30 +26,23 @@ import java.util.concurrent.atomic.AtomicInteger;
  **/
 public class DatabaseReplication {
 
-	public static void main(String[] args) throws Exception {
-
-//		executor.execute(new Runnable() {
-//			@Override
-//			public void run() {
-//				DatabaseReplication at = new DatabaseReplication();
-//				try {
-////					at.read();
-//				} catch (Exception e) {
-//					e.printStackTrace();
-//				}
-//			}
-//		});
-
-
-	}
 
 	private volatile boolean interrupt = false;
+	private CuratorFramework client = null;
+	private DatabaseConfig config = null;
+	private Connection connection = null;
+	private PGReplicationStream stream = null;
 
-	public void interruptReplication(){
+	public void interruptReplication() {
 		this.interrupt = true;
 	}
 
-	public void read(DatabaseConfig config, CuratorFramework client) throws Exception {
+	public DatabaseReplication(CuratorFramework client, DatabaseConfig config) throws SQLException {
+		this.client = client;
+		this.config = config;
+	}
+
+	private Connection dbConnection() throws SQLException {
 		String url = "jdbc:postgresql://localhost:5432/pg";
 		Properties props = new Properties();
 		PGProperty.USER.set(props, config.getUser());
@@ -58,56 +51,65 @@ public class DatabaseReplication {
 		PGProperty.REPLICATION.set(props, "database");
 		PGProperty.PREFER_QUERY_MODE.set(props, "simple");
 
-		Connection con = null;
+		return DriverManager.getConnection(config.getDbUrl(), props);
+	}
+
+	public void replicateLogicalLog() throws Exception {
+		this.connection = dbConnection();
+		read();
+		interruptReplicate();
+	}
+
+	private void read() throws Exception {
 		try {
-			con = DriverManager.getConnection(config.getDbUrl(), props);
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		PGConnection
-				replConnection = con.unwrap(PGConnection.class);
+			PGConnection
+					replConnection = connection.unwrap(PGConnection.class);
 
 
-		PGReplicationStream stream = replConnection.getReplicationAPI()
-				.replicationStream()
-				.logical()
-				.withSlotName(config.getSlotName())
-				.start();
-
-		while (true && !interrupt) {
+			stream = replConnection.getReplicationAPI()
+					.replicationStream()
+					.logical()
+					.withSlotName(config.getSlotName())
+					.start();
 			ByteBuffer msg = null;
-			try {
-				msg = stream.readPending();//read block..
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+			while (true && !interrupt) {
 
-
-			if (msg == null) {
-				try {
+				msg = stream.readPending();//read non block..
+				if (msg == null) {
 					Thread.sleep(200);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
+					continue;
 				}
-//				System.out.println(new Date());
-				continue;
-			}
-			int offset = msg.arrayOffset();
-			byte[] source = msg.array();
-			int length = source.length - offset;
-			String command = new String(source, offset, length);
-			if(command.startsWith("table")){
-				System.out.println(command + "   slot:" + config.getSlotName());
-			}
+				int offset = msg.arrayOffset();
+				byte[] source = msg.array();
+				int length = source.length - offset;
+				String command = new String(source, offset, length);
+				if (command.startsWith("table")) {
+					System.out.println(command + "   slot:" + config.getSlotName());
+				}
 
-			stream.setAppliedLSN(stream.getLastReceiveLSN());
-			stream.setFlushedLSN(stream.getLastReceiveLSN());
+				stream.setAppliedLSN(stream.getLastReceiveLSN());
+				stream.setFlushedLSN(stream.getLastReceiveLSN());
+			}
+		} catch (
+				Exception e)
 
+		{
+			e.printStackTrace();
+		} finally
+
+		{
+			if (stream != null)
+				stream.close();
+			if (connection != null)
+				connection.close();
 		}
-		int i = Zktest.taskcount.decrementAndGet();
-		System.out.println("被终止了wakaka,当前线程执行数量为"+i);
-		stream.close();
-		con.close();
-		client.delete().forPath(Zktest.DOING_TASK_PATH+"/"+config.getTaskName());
+
+
+	}
+
+	private void interruptReplicate() throws Exception {
+		int i = SysConstans.TASK_COUNT.decrementAndGet();
+		System.out.println("被终止了wakaka,当前线程执行数量为" + i);
+		client.delete().forPath(SysConstans.DOING_TASK_PATH + "/" + config.getTaskName());
 	}
 }
