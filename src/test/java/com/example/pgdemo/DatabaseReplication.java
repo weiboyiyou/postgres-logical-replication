@@ -1,5 +1,6 @@
 package com.example.pgdemo;
 
+import org.apache.curator.framework.CuratorFramework;
 import org.postgresql.PGConnection;
 import org.postgresql.PGProperty;
 import org.postgresql.replication.LogSequenceNumber;
@@ -24,40 +25,31 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @Version: 1.0
  **/
 public class DatabaseReplication {
-	public static ThreadPoolExecutor executor = new ThreadPoolExecutor(5, 5, 5, TimeUnit.SECONDS, new ArrayBlockingQueue<>(100000), new ThreadFactory() {
-		AtomicInteger atomicInteger = new AtomicInteger();
-
-		@Override
-		public Thread newThread(Runnable r) {
-			Thread t = new Thread(r, "name" + atomicInteger.incrementAndGet());
-			t.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-				@Override
-				public void uncaughtException(Thread t, Throwable e) {
-					System.out.println("异常了" + e);
-				}
-			});
-			return t;
-		}
-	});
 
 	public static void main(String[] args) throws Exception {
 
-		executor.execute(new Runnable() {
-			@Override
-			public void run() {
-				DatabaseReplication at = new DatabaseReplication();
-				try {
-//					at.read();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
+//		executor.execute(new Runnable() {
+//			@Override
+//			public void run() {
+//				DatabaseReplication at = new DatabaseReplication();
+//				try {
+////					at.read();
+//				} catch (Exception e) {
+//					e.printStackTrace();
+//				}
+//			}
+//		});
 
 
 	}
 
-	public static void read(DatabaseConfig config) throws Exception {
+	private volatile boolean interrupt = false;
+
+	public void interruptReplication(){
+		this.interrupt = true;
+	}
+
+	public void read(DatabaseConfig config, CuratorFramework client) throws Exception {
 		String url = "jdbc:postgresql://localhost:5432/pg";
 		Properties props = new Properties();
 		PGProperty.USER.set(props, config.getUser());
@@ -82,10 +74,10 @@ public class DatabaseReplication {
 				.withSlotName(config.getSlotName())
 				.start();
 
-		while (true) {
+		while (true && !interrupt) {
 			ByteBuffer msg = null;
 			try {
-				msg = stream.read();
+				msg = stream.readPending();//read block..
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
@@ -93,11 +85,11 @@ public class DatabaseReplication {
 
 			if (msg == null) {
 				try {
-					Thread.sleep(100);
+					Thread.sleep(200);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
-				System.out.println(new Date());
+//				System.out.println(new Date());
 				continue;
 			}
 			int offset = msg.arrayOffset();
@@ -112,5 +104,10 @@ public class DatabaseReplication {
 			stream.setFlushedLSN(stream.getLastReceiveLSN());
 
 		}
+		int i = Zktest.taskcount.decrementAndGet();
+		System.out.println("被终止了wakaka,当前线程执行数量为"+i);
+		stream.close();
+		con.close();
+		client.delete().forPath(Zktest.DOING_TASK_PATH+"/"+config.getTaskName());
 	}
 }
