@@ -6,6 +6,7 @@ import com.haben.pgreplication.config.SysConstants;
 import com.haben.pgreplication.entity.DatabaseReplication;
 import com.haben.pgreplication.ha.HaRegister;
 import com.haben.pgreplication.listener.ReplicationLeaderSelectorListener;
+import com.haben.pgreplication.util.PropertiesUtils;
 import com.haben.pgreplication.zk.ZkClient;
 import org.apache.curator.framework.recipes.leader.LeaderSelector;
 import org.slf4j.Logger;
@@ -28,17 +29,15 @@ public class DatabaseReplicationMain {
 
 	private static Logger log = LoggerFactory.getLogger(DatabaseReplicationMain.class);
 
-
 	private static ThreadPoolExecutor executor =
-			new ThreadPoolExecutor(2, 2,
+			new ThreadPoolExecutor(SysConstants.POOL_SIZE, SysConstants.POOL_SIZE,
 					5, TimeUnit.SECONDS,
-					new ArrayBlockingQueue<>(10),
+					new ArrayBlockingQueue<>(SysConstants.POOL_SIZE),
 					new ThreadFactory() {
 						AtomicInteger atomicInteger = new AtomicInteger();
-
 						@Override
 						public Thread newThread(Runnable r) {
-							Thread t = new Thread(r, "name" + atomicInteger.incrementAndGet());
+							Thread t = new Thread(r, "pg-rep-pool-" + atomicInteger.incrementAndGet());
 							t.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
 								@Override
 								public void uncaughtException(Thread t, Throwable e) {
@@ -48,7 +47,6 @@ public class DatabaseReplicationMain {
 							return t;
 						}
 					});
-
 
 	public static void main(String[] args) throws Exception {
 

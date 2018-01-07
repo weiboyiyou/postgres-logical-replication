@@ -1,5 +1,7 @@
 package com.haben.pgreplication.config;
 
+import com.haben.pgreplication.util.PropertiesUtils;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.UUID;
@@ -19,6 +21,7 @@ public class SysConstants {
 	public static final String DB_TASK_PATH = ROOT_PATH + "/db-task";
 	public static final String DOING_TASK_PATH = ROOT_PATH + "/doing-task";
 	public static final String NODE_STATUS_PATH = ROOT_PATH + "/node-status";
+	public static final int POOL_SIZE = Integer.valueOf(PropertiesUtils.getProperty("pool-size"));
 
 	private static String getHost() {
 		try {

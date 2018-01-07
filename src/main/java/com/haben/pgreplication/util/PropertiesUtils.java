@@ -44,7 +44,7 @@ public class PropertiesUtils {
 				properties = getProperties();
 			}
 		}
-		return properties.getProperty(key);
+		return properties.getProperty(key).trim();
 	}
 
 	public static void main(String[] args) {

@@ -33,7 +33,8 @@ public class ReplicationLeaderSelectorListener implements LeaderSelectorListener
 	@Override
 	public void takeLeadership(CuratorFramework curatorFramework) {
 		log.debug("tk开始,当前执行的数量为:" + SysConstants.TASK_COUNT.get());
-		if (SysConstants.TASK_COUNT.get() < 2 && SysConstants.MACHINE_CODE.equals(HaRegister.getMinExecTaskHost())) {
+		if (SysConstants.TASK_COUNT.get() < SysConstants.POOL_SIZE
+				&& SysConstants.MACHINE_CODE.equals(HaRegister.getMinExecTaskHost())) {
 			log.debug("当前线程池还有空 并且 本机是执行数量最小的host");
 			try {
 				List<String> taskList = ZkClient.getChildList(SysConstants.DB_TASK_PATH);
