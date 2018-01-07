@@ -50,7 +50,8 @@ public class HaRegister {
 			List<String> nodes = ZkClient.getChildList(SysConstants.LEADER_PATH);
 			List<String> dbTask = ZkClient.getChildList(SysConstants.DB_TASK_PATH);
 
-			int max = (dbTask.size() / nodes.size()) + (dbTask.size() % nodes.size() == 0 ? 0 : 1);//每个点 最大应该执行的数量
+			//每个点 最大应该执行的数量
+			int max = (dbTask.size() / nodes.size()) + (dbTask.size() % nodes.size() == 0 ? 0 : 1);
 
 			log.debug("max===" + max);
 			if (SysConstants.TASK_COUNT.get() > max) {

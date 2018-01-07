@@ -53,4 +53,7 @@ public class PropertiesUtils {
 		String property = properties.getProperty("taska");
 		System.out.println(property);
 	}
+
+
+
 }

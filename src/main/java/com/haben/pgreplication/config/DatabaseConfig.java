@@ -15,16 +15,15 @@ public class DatabaseConfig {
 	private String taskName;
 
 	public DatabaseConfig(String config) {
-		String[] split = config.split("\n");// 0 url 1user 2passwd 3slotname
-		this.dbUrl = getProperty(split[0]);
-		this.user = getProperty(split[1]);
-		this.passwd = getProperty(split[2]);
-		this.slotName = getProperty(split[3]);
-		this.taskName = getProperty(split[4]);
+		// 0 url 1user 2passwd 3slotname
+		String[] split = config.split("\n");
+		this.dbUrl = split[0];
+		this.user = split[1];
+		this.passwd = split[2];
+		this.slotName = split[3];
+		this.taskName = split[4];
 	}
-	public String getProperty(String str){
-		return str.split("=")[1];
-	}
+
 
 	public String getDbUrl() {
 		return dbUrl;

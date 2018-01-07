@@ -10,7 +10,7 @@
     <root level="INFO">
         <appender-ref ref="STDOUT" />
     </root>
-    <logger name="com.example.pgdemo" level="DEBUG" additivity="false">
+    <logger name="com.haben.pgreplication" level="DEBUG" additivity="false">
         <appender-ref ref="STDOUT"/>
     </logger>
 
