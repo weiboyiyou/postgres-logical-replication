@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @Author: Haben
@@ -25,6 +26,7 @@ public class ReplicationLeaderSelectorListener implements LeaderSelectorListener
 
 	private static final Logger log = LoggerFactory.getLogger(ReplicationLeaderSelectorListener.class);
 
+	private static final AtomicInteger count = new AtomicInteger();
 	@Override
 	public void stateChanged(CuratorFramework client, ConnectionState newState) {
 		log.debug("stateChanged");
@@ -32,6 +34,7 @@ public class ReplicationLeaderSelectorListener implements LeaderSelectorListener
 
 	@Override
 	public void takeLeadership(CuratorFramework curatorFramework) {
+		System.out.println("第"+count.incrementAndGet()+"次获取到了权限");
 		log.debug("tk开始,当前执行的数量为:" + SysConstants.TASK_COUNT.get());
 		if (SysConstants.TASK_COUNT.get() < SysConstants.POOL_SIZE
 				&& SysConstants.MACHINE_CODE.equals(HaRegister.getMinExecTaskHost())) {

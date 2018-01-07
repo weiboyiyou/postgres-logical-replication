@@ -45,11 +45,13 @@
 
         <!-- https://mvnrepository.com/artifact/org.apache.kafka/kafka -->
         <!-- https://mvnrepository.com/artifact/org.apache.kafka/kafka-clients -->
+        <!-- https://mvnrepository.com/artifact/org.apache.kafka/kafka -->
         <dependency>
             <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka-clients</artifactId>
+            <artifactId>kafka_2.12</artifactId>
             <version>1.0.0</version>
         </dependency>
+
 
 
 
