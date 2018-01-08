@@ -67,4 +67,20 @@ public class PgLogicalApplication {
 		return resMap;
 	}
 
+
+	@RequestMapping("/machine")
+	public Map getMachineList() throws Exception {
+		final List<String> doingList = ZkClient.getChildList(SysConstants.NODE_STATUS_PATH);
+		final Map<String, String> resMap = new HashMap();
+		doingList.forEach(node -> {
+			try {
+				String nodeTaskNum = ZkClient.getNodeData(SysConstants.NODE_STATUS_PATH + "/" + node);
+				resMap.put(node, nodeTaskNum);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+		});
+		return resMap;
+	}
 }
