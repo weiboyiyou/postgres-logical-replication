@@ -36,7 +36,7 @@ public class HaRegister {
 					minNode = node;
 				}
 			}
-			log.debug("getMinExecHost:" + minNode);
+			log.debug("当前最小执行节点为：getMinExecHost:{}", minNode);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -53,9 +53,9 @@ public class HaRegister {
 			//每个点 最大应该执行的数量
 			int max = (dbTask.size() / nodes.size()) + (dbTask.size() % nodes.size() == 0 ? 0 : 1);
 
-			log.debug("max===" + max);
+			log.debug("每个节点应该执行的最大不超过:max==={}", max);
 			if (SysConstants.TASK_COUNT.get() > max) {
-				log.debug("当前节点干的活太多了 执行数量为:" + SysConstants.TASK_COUNT.get() + "，应该不超过:" + max + "...有好多节点比他少，停一个吧");
+				log.debug("当前节点干的活太多了 执行数量为:{},应该不超过:{}...有好多节点比他少，停一个吧", SysConstants.TASK_COUNT.get(), max);
 				interruptTask();
 			}
 		} catch (Exception e) {
@@ -77,7 +77,7 @@ public class HaRegister {
 	public static void syncExecTaskSizeToZk() {
 		try {
 			// 写入当前节点执行的replication数量
-			Stat stat = ZkClient.client.checkExists().forPath(SysConstants.NODE_STATUS_PATH + "/" + SysConstants.MACHINE_CODE);
+			Stat stat = ZkClient.CLIENT.checkExists().forPath(SysConstants.NODE_STATUS_PATH + "/" + SysConstants.MACHINE_CODE);
 
 			if (stat == null) {
 				createAndwriteExecTaskSizeToZk();
@@ -91,11 +91,29 @@ public class HaRegister {
 	}
 
 	private static void createAndwriteExecTaskSizeToZk() throws Exception {
-		ZkClient.client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(SysConstants.NODE_STATUS_PATH + "/" + SysConstants.MACHINE_CODE, String.valueOf(SysConstants.TASK_COUNT.get()).getBytes());
+		ZkClient.CLIENT.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(SysConstants.NODE_STATUS_PATH + "/" + SysConstants.MACHINE_CODE, String.valueOf(SysConstants.TASK_COUNT.get()).getBytes());
 
 	}
 
+	public static void writeTaskSizeToZk(int taskSize) throws Exception {
+		ZkClient.CLIENT.setData().forPath(SysConstants.NODE_STATUS_PATH + "/" + SysConstants.MACHINE_CODE, String.valueOf(taskSize).getBytes());
+	}
+
 	public static void writeExecTaskSizeToZk() throws Exception {
-		ZkClient.client.setData().forPath(SysConstants.NODE_STATUS_PATH + "/" + SysConstants.MACHINE_CODE, String.valueOf(SysConstants.TASK_COUNT.get()).getBytes());
+		writeTaskSizeToZk(SysConstants.TASK_COUNT.get());
+	}
+
+
+	public static int decrementTaskSizeAndWriteToZk() throws Exception {
+		int taskSize;
+		writeTaskSizeToZk(taskSize = SysConstants.TASK_COUNT.decrementAndGet());
+		return taskSize;
+	}
+
+	public static int incrementTaskSizeAndWriteToZk() throws Exception {
+		int taskSize;
+		// 增加任务数量
+		writeTaskSizeToZk(taskSize = SysConstants.TASK_COUNT.incrementAndGet());
+		return taskSize;
 	}
 }

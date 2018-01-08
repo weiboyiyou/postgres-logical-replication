@@ -18,9 +18,9 @@ public class ZkClient {
 
 	private static final String ZK_URL = "zkurl";
 
-	public final static CuratorFramework client = getClient();
+	public final static CuratorFramework CLIENT = getClient();
 
-	private static CuratorFramework getClient() {
+	public static CuratorFramework getClient() {
 		String url = PropertiesUtils.getProperty(ZK_URL);
 		RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
 		CuratorFramework curatorFramework =
@@ -36,15 +36,14 @@ public class ZkClient {
 
 
 	public static List<String> getChildList(String path) throws Exception {
-		return ZkClient.client.getChildren().forPath(path);
+		return CLIENT.getChildren().forPath(path);
 	}
 
 	public static String getNodeData(String path) throws Exception {
-		return new String(ZkClient.client.getData().forPath(path));
+		return new String(CLIENT.getData().forPath(path));
 	}
 
 	public static void main(String[] args) {
-		CuratorFramework client = getClient();
-		System.out.println(client);
+		System.out.println(CLIENT);
 	}
 }

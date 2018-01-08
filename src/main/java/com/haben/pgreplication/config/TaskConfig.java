@@ -1,20 +1,24 @@
 package com.haben.pgreplication.config;
 
+import java.util.concurrent.CountDownLatch;
+
 /**
  * @Author: Haben
  * @Description:
  * @Date: 2018-01-06 13:58
  * @Version: 1.0
  **/
-public class DatabaseConfig {
+public class TaskConfig {
 
 	private String dbUrl;
 	private String user;
 	private String passwd;
 	private String slotName;
 	private String taskName;
+	private String topic;
+	private String kafkaUrl;
 
-	public DatabaseConfig(String config) {
+	public TaskConfig(String config) {
 		// 0 url 1user 2passwd 3slotname
 		String[] split = config.split("\n");
 		this.dbUrl = split[0];
@@ -22,8 +26,26 @@ public class DatabaseConfig {
 		this.passwd = split[2];
 		this.slotName = split[3];
 		this.taskName = split[4];
+		this.topic = split[5];
+		this.kafkaUrl = split[6];
 	}
 
+
+
+
+	private CountDownLatch countDownLatch = new CountDownLatch(1);
+
+	public CountDownLatch getCountDownLatch() {
+		return countDownLatch;
+	}
+
+	public String getTopic() {
+		return topic;
+	}
+
+	public String getKafkaUrl() {
+		return kafkaUrl;
+	}
 
 	public String getDbUrl() {
 		return dbUrl;

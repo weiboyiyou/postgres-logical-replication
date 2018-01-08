@@ -22,9 +22,9 @@ import java.util.concurrent.TimeUnit;
  **/
 public class TestSqlBatch {
 	public static void main(String[] args) throws SQLException, InterruptedException {
-		String url = "jdbc:postgresql://localhost:5432/pg";
+		String url = "jdbc:postgresql://localhost:5432/postgres";
 		Properties props = new Properties();
-		PGProperty.USER.set(props, "hpym365");
+		PGProperty.USER.set(props, "hanpeng");
 		PGProperty.PASSWORD.set(props, "postgres");
 		PGProperty.ASSUME_MIN_SERVER_VERSION.set(props, "10.1");
 		PGProperty.REPLICATION.set(props, "database");

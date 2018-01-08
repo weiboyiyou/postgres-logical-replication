@@ -1,12 +1,18 @@
 package com.haben.pgreplication.entity;
 
-import com.haben.pgreplication.config.DatabaseConfig;
 import com.haben.pgreplication.config.SysConstants;
+import com.haben.pgreplication.config.TaskConfig;
 import com.haben.pgreplication.ha.HaRegister;
+import com.haben.pgreplication.kafka.MessageProducer;
+import com.haben.pgreplication.zk.ZkClient;
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.zookeeper.CreateMode;
 import org.postgresql.PGConnection;
 import org.postgresql.PGProperty;
+import org.postgresql.replication.LogSequenceNumber;
 import org.postgresql.replication.PGReplicationStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.sql.Connection;
@@ -23,23 +29,29 @@ import java.util.Properties;
 public class DatabaseReplication {
 
 
+	private static final Logger log = LoggerFactory.getLogger(DatabaseReplication.class);
+
 	private volatile boolean interrupt = false;
 	private CuratorFramework client = null;
-	private DatabaseConfig config = null;
+	private TaskConfig config = null;
 	private Connection connection = null;
 	private PGReplicationStream stream = null;
+	private MessageProducer producer = null;
 
 	public void interruptReplication() {
 		this.interrupt = true;
 	}
 
-	public DatabaseReplication(CuratorFramework client, DatabaseConfig config) throws SQLException {
-		this.client = client;
+	public DatabaseReplication(TaskConfig config) throws SQLException {
+		this.client = ZkClient.getClient();
 		this.config = config;
+		this.connection = dbConnection();
+		producer = new MessageProducer(config);
 	}
 
 	private Connection dbConnection() throws SQLException {
-		String url = "jdbc:postgresql://localhost:5432/pg";
+		//"jdbc:postgresql://localhost:5432/pg";
+		String url = config.getDbUrl();
 		Properties props = new Properties();
 		PGProperty.USER.set(props, config.getUser());
 		PGProperty.PASSWORD.set(props, config.getPasswd());
@@ -47,20 +59,23 @@ public class DatabaseReplication {
 		PGProperty.REPLICATION.set(props, "database");
 		PGProperty.PREFER_QUERY_MODE.set(props, "simple");
 
-		return DriverManager.getConnection(config.getDbUrl(), props);
+		return DriverManager.getConnection(url, props);
 	}
 
 	public void replicateLogicalLog() throws Exception {
-		this.connection = dbConnection();
+		// 创建任务doing
+		String s = client.create().withMode(CreateMode.EPHEMERAL).forPath(SysConstants.DOING_TASK_PATH + "/" + config.getTaskName(), SysConstants.MACHINE_CODE.getBytes());
+		HaRegister.incrementTaskSizeAndWriteToZk();
+		//同步成功之后释放await
+		config.getCountDownLatch().countDown();
 		read();
 		interruptReplicate();
 	}
 
-	private void read() throws Exception {
+	private void read() {
 		try {
 			PGConnection
 					replConnection = connection.unwrap(PGConnection.class);
-
 
 			stream = replConnection.getReplicationAPI()
 					.replicationStream()
@@ -69,8 +84,9 @@ public class DatabaseReplication {
 					.start();
 			ByteBuffer msg = null;
 			while (true && !interrupt) {
-
-				msg = stream.readPending();//read non block..
+//				System.out.println("interruptinterrupt:"+interrupt    +"     "+Thread.currentThread().getName());
+				//read non block..
+				msg = stream.readPending();
 				if (msg == null) {
 					Thread.sleep(200);
 					continue;
@@ -79,36 +95,44 @@ public class DatabaseReplication {
 				byte[] source = msg.array();
 				int length = source.length - offset;
 				String command = new String(source, offset, length);
-				if (command.startsWith("table")) {
-					System.out.println(command + "   slot:" + config.getSlotName());
-				}
+				LogSequenceNumber lastReceiveLSN = stream.getLastReceiveLSN();
+				int hashCode = (offset + command).hashCode();
+//				if (command.startsWith("table")) {
+				producer.sendMsg(config.getTopic(), lastReceiveLSN.asLong(), command);
+				System.out.println(command + "   slot:" + config.getSlotName());
+//				}
 
-				stream.setAppliedLSN(stream.getLastReceiveLSN());
-				stream.setFlushedLSN(stream.getLastReceiveLSN());
+				stream.setAppliedLSN(lastReceiveLSN);
+				stream.setFlushedLSN(lastReceiveLSN);
 			}
-		} catch (
-				Exception e)
-
-		{
+		} catch (Exception e) {
 			e.printStackTrace();
-		} finally
-
-		{
-			if (stream != null)
-				stream.close();
-			if (connection != null)
-				connection.close();
+		} finally {
+			try {
+				if (stream != null) {
+					stream.close();
+				}
+				if (connection != null) {
+					connection.close();
+				}
+				if (client != null) {
+					client.close();
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 
 
 	}
 
 	private void interruptReplicate() throws Exception {
-		int i = SysConstants.TASK_COUNT.decrementAndGet();
-		System.out.println("被终止了wakaka,当前线程执行数量为" + i);
-		// 删除doing 因为进程没终止 这个还会在的
-		client.delete().forPath(SysConstants.DOING_TASK_PATH + "/" + config.getTaskName());
+		//任务数量-1
+		int i = HaRegister.decrementTaskSizeAndWriteToZk();
+		log.debug("被终止了wakaka,当前线程执行数量为" + i);
+		// 删除doing 因为进程没终止 这个还会在的  修改之后不删除进程挂掉  client结束应该自动删除了
+//		client.delete().forPath(SysConstants.DOING_TASK_PATH + "/" + config.getTaskName());
 		// 修改当前节点的数量
-		HaRegister.writeExecTaskSizeToZk();
+//		HaRegister.writeExecTaskSizeToZk();
 	}
 }

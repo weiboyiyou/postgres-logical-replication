@@ -44,7 +44,13 @@ public class PropertiesUtils {
 				properties = getProperties();
 			}
 		}
-		return properties.getProperty(key).trim();
+		String res = "";
+		try{
+			res = properties.getProperty(key).trim();
+		}catch (Exception e){
+			throw new RuntimeException("读取参数错误请检查配置,参数:"+key+"不存在."+e);
+		}
+		return res;
 	}
 
 	public static void main(String[] args) {

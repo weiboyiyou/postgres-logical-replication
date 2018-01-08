@@ -1,8 +1,8 @@
 package com.haben.pgreplication;
 
-import com.haben.pgreplication.config.DatabaseConfig;
 import com.haben.pgreplication.config.DatabaseReplicationConfig;
 import com.haben.pgreplication.config.SysConstants;
+import com.haben.pgreplication.config.TaskConfig;
 import com.haben.pgreplication.entity.DatabaseReplication;
 import com.haben.pgreplication.ha.HaRegister;
 import com.haben.pgreplication.listener.ReplicationLeaderSelectorListener;
@@ -35,13 +35,14 @@ public class DatabaseReplicationMain {
 					new ArrayBlockingQueue<>(SysConstants.POOL_SIZE),
 					new ThreadFactory() {
 						AtomicInteger atomicInteger = new AtomicInteger();
+
 						@Override
 						public Thread newThread(Runnable r) {
 							Thread t = new Thread(r, "pg-rep-pool-" + atomicInteger.incrementAndGet());
 							t.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
 								@Override
 								public void uncaughtException(Thread t, Throwable e) {
-									log.debug("异常了" + e);
+									log.error("异常了{}", e);
 								}
 							});
 							return t;
@@ -49,11 +50,13 @@ public class DatabaseReplicationMain {
 					});
 
 	public static void main(String[] args) throws Exception {
+		System.out.println("PG-LOGICAL-RELIPCATION  is starting......");
+		Thread.sleep(666);
 
 		DatabaseReplicationConfig.initZkPath();
 		HaRegister.syncExecTaskSizeToZk();
 
-		LeaderSelector leaderSelector = new LeaderSelector(ZkClient.client, SysConstants.LEADER_PATH, new ReplicationLeaderSelectorListener());
+		LeaderSelector leaderSelector = new LeaderSelector(ZkClient.CLIENT, SysConstants.LEADER_PATH, new ReplicationLeaderSelectorListener());
 
 		leaderSelector.start();
 		leaderSelector.autoRequeue();
@@ -62,10 +65,9 @@ public class DatabaseReplicationMain {
 			int activeCount = executor.getActiveCount();
 //			taskcount.set(activeCount);
 			int maximumPoolSize = executor.getMaximumPoolSize();
-			log.debug("当前执行数量" + activeCount);
-			log.debug("当前剩余数量" + (maximumPoolSize - activeCount));
+			log.debug("当前执行数量{},当前剩余数量:{}", activeCount, (maximumPoolSize - activeCount));
 			// 写入zk 任务过来时候排序是否最小 最小的话那就执行 不然不执行
-			log.debug("我是谁:" + SysConstants.MACHINE_CODE);
+			log.debug("我是谁:{}", SysConstants.MACHINE_CODE);
 //			HaRegister.syncExecTaskSizeToZk();
 			Thread.sleep(20000);
 			HaRegister.loadBalance();
@@ -76,17 +78,23 @@ public class DatabaseReplicationMain {
 	}
 
 
-	public static void executorExec(DatabaseConfig config) {
+	public static void executorExec(TaskConfig config) {
 		log.debug("线程池添加任务了");
 		executor.execute(new Runnable() {
 			@Override
 			public void run() {
 				try {
-					DatabaseReplication databaseReplication = new DatabaseReplication(ZkClient.client, config);
+					DatabaseReplication databaseReplication = new DatabaseReplication(config);
 					HaRegister.interruptList.add(databaseReplication);
 					databaseReplication.replicateLogicalLog();
-				} catch (Exception e) {
-					e.printStackTrace();
+				} catch (Throwable e) {
+					try {
+						log.error(e.getMessage());
+						Thread.sleep(5000);
+						Thread.currentThread().interrupt();
+					} catch (InterruptedException e1) {
+						e1.printStackTrace();
+					}
 				}
 			}
 		});
