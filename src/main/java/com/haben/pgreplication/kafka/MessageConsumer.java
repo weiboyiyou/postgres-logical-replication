@@ -37,6 +37,7 @@ public class MessageConsumer {
 		while (true){
 			try {
 			ConsumerRecords<Long, String> poll = consumer.poll(1000);
+				System.out.println(poll.count());
 			poll.forEach((record)->{
 				Long offset = record.key();
 				String value = record.value();

@@ -48,7 +48,6 @@ public class PgLogicalApplication {
 
 	@RequestMapping("/doing")
 	public Map getDoingList() throws Exception {
-		final List<String> taskList = ZkClient.getChildList(SysConstants.DB_TASK_PATH);
 		final List<String> doingList = ZkClient.getChildList(SysConstants.DOING_TASK_PATH);
 		final Map<String, List<TaskConfig>> resMap = new HashMap();
 		doingList.forEach(childDataPath -> {

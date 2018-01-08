@@ -48,7 +48,7 @@
         <!-- https://mvnrepository.com/artifact/org.apache.kafka/kafka -->
         <dependency>
             <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka_2.12</artifactId>
+            <artifactId>kafka-clients</artifactId>
             <version>1.0.0</version>
         </dependency>
 

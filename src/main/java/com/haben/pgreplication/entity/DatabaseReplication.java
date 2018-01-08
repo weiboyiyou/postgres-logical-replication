@@ -96,7 +96,6 @@ public class DatabaseReplication {
 				int length = source.length - offset;
 				String command = new String(source, offset, length);
 				LogSequenceNumber lastReceiveLSN = stream.getLastReceiveLSN();
-				int hashCode = (offset + command).hashCode();
 //				if (command.startsWith("table")) {
 				producer.sendMsg(config.getTopic(), lastReceiveLSN.asLong(), command);
 				System.out.println(command + "   slot:" + config.getSlotName());
