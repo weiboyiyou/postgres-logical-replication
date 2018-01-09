@@ -1,14 +1,14 @@
 # postgres-logical-replication by java
 
 ### The application to be a producer,send logical log to kafka.. Spark or other applications can be the consumer
-
+![image](http://chuantu.biz/t6/201/1515515409x-1404795475.png)
 ---
 
 - 通过postgres-logical-replication对数据库变更事实处理,目前PG只支持处理DML。
 - 通过ZK来做HA+LB，保证任务数量平均分配到各自执行节点，当某个节点宕机可以顺利Failover。
 - 通过Kafka来做消息转发，本程序为消息生产者。
 - 配置文件application.properties可以设置系统任务以及其他参数
-- 通过http://localhost:8080/task, http://localhost:8080/doing
+- 通过http://localhost:8080/task, http://localhost:8080/doing ,http://localhost:8080/machine
 查看当前任务以及每台机器执行情况。
 
 ### 目前该中间件支持HelloBike每天大概5亿次数据库变更。
